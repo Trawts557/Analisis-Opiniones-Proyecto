@@ -7,18 +7,18 @@ using System.Globalization;
 
 namespace AnalisisOpiniones.Data.Persistence.Repositories.Csv
 {
-    public class CsvReaderRepository : IFileReaderRepository<CsvModel>
+    public class ClientCsvReaderRepository : IFileReaderRepository<ClientCsvModel>
     {
-        public async Task<List<CsvModel>> ReadAsync(string path, CancellationToken cancellationToken = default)
+        public async Task<List<ClientCsvModel>> ReadAsync(string path, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(path))
             {
-                throw new ArgumentException("La ruta del archivo CSV no puede estar vacia.", nameof(path));
+                throw new ArgumentException("La ruta del archivo clients.csv no puede estar vacía.", nameof(path));
             }
 
             if (!File.Exists(path))
             {
-                throw new FileNotFoundException($"No se encontro el archivo CSV en la ruta: {path}");
+                throw new FileNotFoundException($"No se encontró el archivo clients.csv en la ruta: {path}");
             }
 
             using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
@@ -35,9 +35,9 @@ namespace AnalisisOpiniones.Data.Persistence.Repositories.Csv
 
             using var csv = new CsvReader(reader, config);
 
-            csv.Context.RegisterClassMap<CsvMap>();
+            csv.Context.RegisterClassMap<ClientCsvMap>();
 
-            var records = csv.GetRecords<CsvModel>().ToList();
+            var records = csv.GetRecords<ClientCsvModel>().ToList();
 
             return await Task.FromResult(records);
         }

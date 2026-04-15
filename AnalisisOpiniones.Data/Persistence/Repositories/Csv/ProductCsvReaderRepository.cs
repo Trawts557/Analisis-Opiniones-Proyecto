@@ -1,24 +1,24 @@
-﻿using AnalisisOpiniones.Data.Entities.Csv;
+﻿using System.Globalization;
+using AnalisisOpiniones.Data.Entities.Csv;
 using AnalisisOpiniones.Data.Interfaces;
 using AnalisisOpiniones.Data.Persistence.Repositories.Csv.Maps;
 using CsvHelper;
 using CsvHelper.Configuration;
-using System.Globalization;
 
 namespace AnalisisOpiniones.Data.Persistence.Repositories.Csv
 {
-    public class CsvReaderRepository : IFileReaderRepository<CsvModel>
+    public class ProductCsvReaderRepository : IFileReaderRepository<ProductCsvModel>
     {
-        public async Task<List<CsvModel>> ReadAsync(string path, CancellationToken cancellationToken = default)
+        public async Task<List<ProductCsvModel>> ReadAsync(string path, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(path))
             {
-                throw new ArgumentException("La ruta del archivo CSV no puede estar vacia.", nameof(path));
+                throw new ArgumentException("La ruta del archivo products.csv no puede estar vacía.", nameof(path));
             }
 
             if (!File.Exists(path))
             {
-                throw new FileNotFoundException($"No se encontro el archivo CSV en la ruta: {path}");
+                throw new FileNotFoundException($"No se encontró el archivo products.csv en la ruta: {path}");
             }
 
             using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
@@ -35,9 +35,9 @@ namespace AnalisisOpiniones.Data.Persistence.Repositories.Csv
 
             using var csv = new CsvReader(reader, config);
 
-            csv.Context.RegisterClassMap<CsvMap>();
+            csv.Context.RegisterClassMap<ProductCsvMap>();
 
-            var records = csv.GetRecords<CsvModel>().ToList();
+            var records = csv.GetRecords<ProductCsvModel>().ToList();
 
             return await Task.FromResult(records);
         }

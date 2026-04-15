@@ -2,6 +2,7 @@ using AnalisisOpiniones.Data.Entities.Api;
 using AnalisisOpiniones.Data.Entities.Csv;
 using AnalisisOpiniones.Data.Entities.Db;
 using AnalisisOpiniones.Data.Interfaces;
+using AnalisisOpiniones.Data.Persistence.Repositories.Dwh;
 
 namespace AnalisisOpiniones.WkService
 {
@@ -13,6 +14,7 @@ namespace AnalisisOpiniones.WkService
         private readonly IApiReaderRepository<ApiModel> _apiReaderRepository;
         private readonly IConfiguration _configuration;
         private readonly IHostEnvironment _environment;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
 
         public Worker(
             ILogger<Worker> logger,
@@ -20,7 +22,8 @@ namespace AnalisisOpiniones.WkService
             IDbReaderRepository<DbModel> dbReaderRepository,
             IApiReaderRepository<ApiModel> apiReaderRepository,
             IConfiguration configuration,
-            IHostEnvironment environment)
+            IHostEnvironment environment,
+            IServiceScopeFactory serviceScopeFactory)
         {
             _logger = logger;
             _csvReaderRepository = csvReaderRepository;
@@ -28,6 +31,8 @@ namespace AnalisisOpiniones.WkService
             _apiReaderRepository = apiReaderRepository;
             _configuration = configuration;
             _environment = environment;
+            _serviceScopeFactory = serviceScopeFactory;
+
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -37,6 +42,7 @@ namespace AnalisisOpiniones.WkService
                 await ExtractCsvAsync(stoppingToken);
                 await ExtractDbAsync(stoppingToken);
                 await ExtractApiAsync(stoppingToken);
+                await LoadDimensionsAsync(stoppingToken);
             }
             catch (Exception ex)
             {
@@ -123,5 +129,43 @@ namespace AnalisisOpiniones.WkService
 
             _logger.LogInformation("Proceso de extracción desde API REST finalizado correctamente.");
         }
+
+
+        private async Task LoadDimensionsAsync(CancellationToken stoppingToken)
+        {
+            _logger.LogInformation("Iniciando carga de dimensiones del Data Warehouse...");
+
+            var clientsPath = _configuration["ExtractionSettings:ClientsCsvPath"];
+            var productsPath = _configuration["ExtractionSettings:ProductsCsvPath"];
+            var fuentesPath = _configuration["ExtractionSettings:FuentesCsvPath"];
+            var surveysPath = _configuration["ExtractionSettings:CsvPath"];
+
+            if (string.IsNullOrWhiteSpace(clientsPath) ||
+                string.IsNullOrWhiteSpace(productsPath) ||
+                string.IsNullOrWhiteSpace(fuentesPath) ||
+                string.IsNullOrWhiteSpace(surveysPath))
+            {
+                throw new InvalidOperationException("No se encontraron todas las rutas necesarias para la carga de dimensiones.");
+            }
+
+            var fullClientsPath = Path.Combine(_environment.ContentRootPath, clientsPath);
+            var fullProductsPath = Path.Combine(_environment.ContentRootPath, productsPath);
+            var fullFuentesPath = Path.Combine(_environment.ContentRootPath, fuentesPath);
+            var fullSurveysPath = Path.Combine(_environment.ContentRootPath, surveysPath);
+
+            using var scope = _serviceScopeFactory.CreateScope();
+
+            var dwhRepository = scope.ServiceProvider.GetRequiredService<IDwhRepository>();
+
+            await dwhRepository.LoadDimsDataAsync(
+                fullClientsPath,
+                fullProductsPath,
+                fullFuentesPath,
+                fullSurveysPath,
+                stoppingToken);
+
+            _logger.LogInformation("Carga de dimensiones finalizada correctamente.");
+        }
+
     }
 }

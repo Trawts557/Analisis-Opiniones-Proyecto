@@ -2,7 +2,7 @@
 
 using AnalisisOpiniones.Data.Entities.Csv;
 
-namespace AnalisisOpiniones.Data.Persistence.Repositories.Csv
+namespace AnalisisOpiniones.Data.Persistence.Repositories.Csv.Maps
 {
     public sealed class CsvMap : ClassMap<CsvModel>
     {
