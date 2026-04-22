@@ -8,5 +8,9 @@
             string fuentesPath,
             string surveysPath,
             CancellationToken cancellationToken = default);
+
+        Task LoadFactsDataAsync(
+            string surveysPath,
+            CancellationToken cancellationToken = default);
     }
 }

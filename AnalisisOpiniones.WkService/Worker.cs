@@ -43,6 +43,7 @@ namespace AnalisisOpiniones.WkService
                 await ExtractDbAsync(stoppingToken);
                 await ExtractApiAsync(stoppingToken);
                 await LoadDimensionsAsync(stoppingToken);
+                await LoadFactsAsync(stoppingToken);
             }
             catch (Exception ex)
             {
@@ -165,6 +166,28 @@ namespace AnalisisOpiniones.WkService
                 stoppingToken);
 
             _logger.LogInformation("Carga de dimensiones finalizada correctamente.");
+        }
+
+        private async Task LoadFactsAsync(CancellationToken stoppingToken)
+        {
+            _logger.LogInformation("Iniciando carga de facts del Data Warehouse...");
+
+            var surveysPath = _configuration["ExtractionSettings:CsvPath"];
+
+            if (string.IsNullOrWhiteSpace(surveysPath))
+            {
+                throw new InvalidOperationException("No se encontró la ruta del archivo de encuestas para la carga de facts.");
+            }
+
+            var fullSurveysPath = Path.Combine(_environment.ContentRootPath, surveysPath);
+
+            using var scope = _serviceScopeFactory.CreateScope();
+
+            var dwhRepository = scope.ServiceProvider.GetRequiredService<IDwhRepository>();
+
+            await dwhRepository.LoadFactsDataAsync(fullSurveysPath, stoppingToken);
+
+            _logger.LogInformation("Carga de facts finalizada correctamente.");
         }
 
     }

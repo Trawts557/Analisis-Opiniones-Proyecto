@@ -1,5 +1,6 @@
 ﻿using AnalisisOpiniones.Data.Entities.Dwh.Dimensions;
 using Microsoft.EntityFrameworkCore;
+using AnalisisOpiniones.Data.Entities.Dwh.Facts;
 
 namespace AnalisisOpiniones.Data.Persistence.Context
 {
@@ -8,7 +9,7 @@ namespace AnalisisOpiniones.Data.Persistence.Context
         public DwhContext(DbContextOptions<DwhContext> options) : base(options)
         {
         }
-
+        public DbSet<FactOpinion> FactOpinion { get; set; }
         public DbSet<DimCliente> DimCliente { get; set; }
         public DbSet<DimProducto> DimProducto { get; set; }
         public DbSet<DimFuente> DimFuente { get; set; }
@@ -24,6 +25,44 @@ namespace AnalisisOpiniones.Data.Persistence.Context
             ConfigureDimFuente(modelBuilder);
             ConfigureDimFecha(modelBuilder);
             ConfigureDimSentimiento(modelBuilder);
+            ConfigureFactOpinion(modelBuilder);
+        }
+
+        private static void ConfigureFactOpinion(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<FactOpinion>(entity =>
+            {
+                entity.ToTable("FactOpinion");
+
+                entity.HasKey(x => x.OpinionKey);
+
+                entity.Property(x => x.OpinionKey)
+                    .ValueGeneratedOnAdd();
+
+                entity.Property(x => x.ClienteKey)
+                    .IsRequired();
+
+                entity.Property(x => x.ProductoKey)
+                    .IsRequired();
+
+                entity.Property(x => x.FechaKey)
+                    .IsRequired();
+
+                entity.Property(x => x.FuenteKey)
+                    .IsRequired();
+
+                entity.Property(x => x.SentimientoKey)
+                    .IsRequired();
+
+                entity.Property(x => x.Comentario)
+                    .IsRequired();
+
+                entity.Property(x => x.PuntajeSatisfaccion)
+                    .IsRequired();
+
+                entity.Property(x => x.Rating)
+                    .IsRequired(false);
+            });
         }
 
         private static void ConfigureDimCliente(ModelBuilder modelBuilder)
